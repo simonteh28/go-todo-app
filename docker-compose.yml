@@ -1,0 +1,59 @@
+version: "3.8"
+
+networks:
+  todoappnetwork:
+    name: todo-app-network
+
+services:
+  todo-api:
+    container_name: todo-api
+    build:
+      context: .
+      dockerfile: dockerfile
+    restart: on-failure:10
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    ports:
+      - "${PORT}:${PORT}"
+    networks:
+      - todoappnetwork
+  db:
+    container_name: todo-api-db
+    image: postgres
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - "${POSTGRES_PORT}:${POSTGRES_PORT}"
+    networks:
+      - todoappnetwork
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+  migrate:
+    container_name: todo-app-migration
+    image: migrate/migrate:latest
+    profiles: ["tools"]
+    volumes:
+      - ./internal/db/migrations:/migrations
+    entrypoint:
+      [
+        "migrate",
+        "-path",
+        "/migrations",
+        "-database",
+        "postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@${POSTGRES_HOST}:${POSTGRES_PORT}/${POSTGRES_DB}?sslmode=disable",
+      ]
+    command: ["up"]
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: on-failure
+    networks:
+      - todoappnetwork
