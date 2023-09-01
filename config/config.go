@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"strconv"
 )
 
 type Config struct {
@@ -14,6 +15,7 @@ type Config struct {
 	dbHost	string
 	dbName 	string
 	dbPort	string
+	production	string
 }
 
 func Get() (*Config, error) {
@@ -55,6 +57,12 @@ func Get() (*Config, error) {
 		return nil, errors.New("invalid configuration. environment variable POSTGRES_PORT not found")
 	}
 
+	// PRODUCTION
+	flag.StringVar(&conf.production, "production", os.Getenv("PRODUCTION"), "Production")
+	if conf.production == "" {
+		return nil, errors.New("invalid configuration. environment variable PRODUCTION not found")
+	}
+
 	flag.Parse()
 
 	return conf, nil
@@ -69,6 +77,10 @@ func (c *Config) GetDBConnString() string {
 		c.dbPort,
 		c.dbName,
 	)
+}
+
+func (c *Config) IsProduction() (bool, error) {
+	return strconv.ParseBool(c.production)
 }
 
 func (c *Config) GetDBString() string {

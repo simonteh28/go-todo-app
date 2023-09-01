@@ -46,6 +46,11 @@ func New() (*WebServer, error){
 }
 
 func (ws *WebServer) Start(registerRoutes func(s Services, r *gin.Engine)){
+	
+	isProduction, _ := ws.cfg.IsProduction()
+	if isProduction {
+		gin.SetMode(gin.ReleaseMode)
+	}
 	ws.router = gin.Default()
 
 	// Cors config
