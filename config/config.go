@@ -70,7 +70,7 @@ func Get() (*Config, error) {
 
 func (c *Config) GetDBConnString() string {
 	return fmt.Sprintf(
-		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		"postgres://%s:%s@%s:%s/%s",
 		c.dbUser,
 		c.dbPass,
 		c.dbHost,
