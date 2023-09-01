@@ -1,8 +1,8 @@
-FROM golang:1.23
+FROM golang:1.21
 
 WORKDIR /app
 
-COPY go.mod .
+COPY go.mod go.sum ./
 COPY . .
 
 RUN go get ./cmd
