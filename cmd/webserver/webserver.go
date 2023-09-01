@@ -3,6 +3,7 @@ package webserver
 import (
 	"fmt"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	"github.com/simonteh28/go-todo-app/api/middleware"
@@ -47,9 +48,14 @@ func New() (*WebServer, error){
 func (ws *WebServer) Start(registerRoutes func(s Services, r *gin.Engine)){
 	ws.router = gin.Default()
 
+	// Cors config
+	config := cors.DefaultConfig();
+	config.AllowOrigins = []string{ "http://localhost:4200" }
+
 	// Register error handler
 	ws.router.Use(
 		middleware.ErrorHandler(),
+		cors.New(config),
 	)
 
 	registerRoutes(ws, ws.router)

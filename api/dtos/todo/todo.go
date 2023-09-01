@@ -9,6 +9,7 @@ type Todo struct {
 	Title string			`json:"title" binding:"required"`
 	Description string		`json:"description"` 
 	Completed bool			`json:"completed"`
+	Date time.Time			`json:"date"`
 	UpdatedDate time.Time	`json:"updatedDate"`
 }
 
@@ -24,5 +25,9 @@ func (td *Todo) MapChanges(newTodo UpdateTodo) {
 
 	if newTodo.Completed != nil && td.Completed != *newTodo.Completed {
 		td.Completed = *newTodo.Completed
+	}
+
+	if newTodo.Date != nil && td.Date != *newTodo.Date {
+		td.Date = *newTodo.Date
 	}
 }

@@ -14,7 +14,7 @@ type TodoService interface {
 	Post(dtos.Todo) (int64, error)
 	Get() ([]*dtos.Todo, error)
 	GetById(string) (*dtos.Todo, error)
-	Patch(string, dtos.UpdateTodo) (*dtos.Todo, error)
+	Patch(string, dtos.UpdateTodo) (string, error)
 	Delete(string) error
 }
 
@@ -40,7 +40,7 @@ func New(cfg *config.Config) (*TodoHandler, error) {
 func (th *TodoHandler) Post(todo dtos.Todo) (int64, error) {
 
 	// log.Println("Inserting new record: " + todo.Title)
-	_, err := th.db.Client.Exec("INSERT INTO todo(title, description, completed) VALUES ($1, $2, $3)", todo.Title, todo.Description, false)
+	_, err := th.db.Client.Exec("INSERT INTO todo(title, description, completed, date) VALUES ($1, $2, $3, $4)", todo.Title, todo.Description, false, todo.Date)
 	if err != nil {
 		return 0, fmt.Errorf("unable to execute insert: %v", err)
 	}
@@ -60,7 +60,7 @@ func (th *TodoHandler) Get() ([]*dtos.Todo, error) {
 	var todos []*dtos.Todo
 
 	// Perform select all
-	rows, err := th.db.Client.Query("SELECT id, title, description, completed, updated_at FROM todo")
+	rows, err := th.db.Client.Query("SELECT id, title, description, completed, date FROM todo")
 	if err != nil {
         return nil, fmt.Errorf("error fetching all todos: %v", err)
     }
@@ -69,7 +69,7 @@ func (th *TodoHandler) Get() ([]*dtos.Todo, error) {
 	// Loop rows
 	for rows.Next() {
 		var todo dtos.Todo
-		if err := rows.Scan(&todo.ID, &todo.Title, &todo.Description, &todo.Completed, &todo.UpdatedDate); err != nil {
+		if err := rows.Scan(&todo.ID, &todo.Title, &todo.Description, &todo.Completed, &todo.Date); err != nil {
 			return nil, fmt.Errorf("error fetching all todos: %v", err)
 		}
 		todos = append(todos, &todo)
@@ -87,8 +87,8 @@ func (th *TodoHandler) Get() ([]*dtos.Todo, error) {
 func (th *TodoHandler) GetById(id string) (*dtos.Todo, error){
 	var todo dtos.Todo
 	// Handle connection to db and perform select with condition
-	row := th.db.Client.QueryRow("SELECT id, title, description, completed, updated_at FROM todo WHERE id = $1", id)
-	err := row.Scan(&todo.ID, &todo.Title, &todo.Description, &todo.Completed, &todo.UpdatedDate)
+	row := th.db.Client.QueryRow("SELECT id, title, description, completed, updated_at, date FROM todo WHERE id = $1", id)
+	err := row.Scan(&todo.ID, &todo.Title, &todo.Description, &todo.Completed, &todo.UpdatedDate, &todo.Date)
 	if err != nil {
 		return nil, fmt.Errorf("unable to get the todo with id " + id + "error: %v", err)
 	}
@@ -96,24 +96,24 @@ func (th *TodoHandler) GetById(id string) (*dtos.Todo, error){
 	return &todo, nil
 }
 
-func (th *TodoHandler) Patch(id string, updateTodo dtos.UpdateTodo) (*dtos.Todo, error) {
+func (th *TodoHandler) Patch(id string, updateTodo dtos.UpdateTodo) (string, error) {
 	var todo *dtos.Todo
 
 	todo, err := th.GetById(id)
 	if err != nil {
-		return nil, err
+		return "Failed", err
 	}
 	
 	// Map field changes
 	todo.MapChanges(updateTodo)
 
 	// Handle connection to db and perform update with condition
-	_, err = th.db.Client.Exec("UPDATE todo SET title = $1, description = $2, completed = $3, updated_at = $4 WHERE id = $5", todo.Title, todo.Description, todo.Completed, time.Now(), id)
+	_, err = th.db.Client.Exec("UPDATE todo SET title = $1, description = $2, completed = $3, updated_at = $4, date = $5 WHERE id = $6", todo.Title, todo.Description, todo.Completed, time.Now(), todo.Date, id)
 	if err != nil {
-		return nil, fmt.Errorf("unable to update the todo with id " + id + "error: %v", err)
+		return "Failed", fmt.Errorf("unable to update the todo with id " + id + "error: %v", err)
 	}
 
-	return todo, nil
+	return "Updated todo " + todo.Title + " successfuly", nil
 }
 
 func (th *TodoHandler) Delete(id string) error {
