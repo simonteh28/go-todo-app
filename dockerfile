@@ -5,8 +5,8 @@ WORKDIR /app
 COPY go.mod go.sum ./
 COPY . .
 
-RUN go get ./cmd
-RUN go build -o bin ./cmd
+RUN go get .
+RUN go build -o bin .
 
 ENTRYPOINT [ "/app/bin" ]
 
