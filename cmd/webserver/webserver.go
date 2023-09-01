@@ -54,8 +54,9 @@ func (ws *WebServer) Start(registerRoutes func(s Services, r *gin.Engine)){
 	ws.router = gin.Default()
 
 	// Cors config
-	config := cors.DefaultConfig();
-	config.AllowOrigins = []string{ "http://localhost:4200" }
+	config := cors.DefaultConfig()
+	// config.AllowOrigins = []string{ "http://localhost:4200" }
+	config.AllowAllOrigins = true
 
 	// Register error handler
 	ws.router.Use(
