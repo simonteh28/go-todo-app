@@ -61,16 +61,14 @@ func Get() (*Config, error) {
 }
 
 func (c *Config) GetDBConnString() string {
-	// return fmt.Sprintf(
-	// 	"postgres://%s:%s@%s:%s/%s?sslmode=disable",
-	// 	c.dbUser,
-	// 	c.dbPass,
-	// 	c.dbHost,
-	// 	c.dbPort,
-	// 	c.dbName,
-	// )
-
-	return "postgres://postgres:postgres@localhost:5432/todo-app?sslmode=disable"
+	return fmt.Sprintf(
+		"postgres://%s:%s@%s:%s/%s?sslmode=disable",
+		c.dbUser,
+		c.dbPass,
+		c.dbHost,
+		c.dbPort,
+		c.dbName,
+	)
 }
 
 func (c *Config) GetDBString() string {
